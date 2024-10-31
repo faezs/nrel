@@ -1,0 +1,15 @@
+[submodule "lk"]
+	path = lk
+	url = git@github.com:nrel/lk
+[submodule "solarPILOT"]
+	path = solarPILOT
+	url = git@github.com:nrel/solarPILOT
+[submodule "solTRACE"]
+	path = solTRACE
+	url = git@github.com:nrel/solTRACE
+[submodule "wex"]
+	path = wex
+	url = git@github.com:nrel/wex
+[submodule "wxWidgets"]
+	path = wxWidgets
+	url = git@github.com:wxWidgets/wxWidgets
