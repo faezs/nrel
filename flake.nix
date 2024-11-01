@@ -38,7 +38,7 @@
       perSystem = { config, self', inputs', pkgs, system, ... }:
       let
         # Build wxWidgets with specific flags
-        wxGTK-static = pkgs.wxGTK31;
+        wxGTK-static = pkgs.wxGTK32;
 
         # Common build inputs
         commonBuildInputs = with pkgs; [
@@ -50,7 +50,7 @@
           fontconfig
           libGL
           freeglut
-          gtk2
+          gtk3
           mesa
           xorg.libX11
           xorg.libXxf86vm
@@ -100,12 +100,12 @@
           # Make files writable
           chmod -R u+w spt_dev
 
-          # Build googletest
-          cd spt_dev/googletest
-          mkdir -p build
-          cd build
-          cmake .. -DCMAKE_BUILD_TYPE=Release -DCMAKE_CXX_FLAGS=-std=c++11
-          make -j$NIX_BUILD_CORES
+          # # Build googletest
+          # cd spt_dev/googletest
+          # mkdir -p build
+          # cd build
+          # cmake .. -DCMAKE_BUILD_TYPE=Release -DCMAKE_CXX_FLAGS=-std=c++11
+          # make -j$NIX_BUILD_CORES
         '';
 
       in {
@@ -125,6 +125,14 @@
             nativeBuildInputs = with pkgs; [
               cmake
               pkg-config
+              gtk2
+              nlopt
+              gcc
+              gpp
+              git
+              libcurl14-openssl
+              build-essential
+
             ];
 
             buildInputs = commonBuildInputs;
@@ -132,11 +140,12 @@
             cmakeFlags = [
               "-DCMAKE_BUILD_TYPE=Release"
               "-DwxWidgets_CONFIG_EXECUTABLE=${wxGTK-static}/bin/wx-config"
+              "-DGTK2_LIBRARIES=${pkgs.gtk3}/lib"
             ];
 
             installPhase = ''
               mkdir -p $out/bin
-              cp SolarPILOT/deploy/x64/SolarPILOT $out/bin/
+              cp SolarPILOT/deploy/aarch64/SolarPILOT $out/bin/
             '';
           };
         };
@@ -150,6 +159,7 @@
             gcc
             gdb
             ninja
+            gtk3
           ];
 
           buildInputs = commonBuildInputs;
@@ -157,6 +167,9 @@
           shellHook = ''
             export WXMSW3="${wxGTK-static}"
             export WX_CONFIG="${wxGTK-static}/bin/wx-config"
+            export GTK3_LIBRARIES=${pkgs.gtk3}/lib
+            export wxWidgets_LIBRARIES=${wxGTK-static}/lib
+            export wxWidgets_INCLUDE_DIRS=${wxGTK-static}/include
 
             # Create development directory structure if it doesn't exist
             if [ ! -d "spt_dev" ]; then

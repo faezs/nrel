@@ -1,0 +1,161 @@
+{
+  "nodes": {
+    "flake-parts": {
+      "inputs": {
+        "nixpkgs-lib": "nixpkgs-lib"
+      },
+      "locked": {
+        "lastModified": 1727826117,
+        "narHash": "sha256-K5ZLCyfO/Zj9mPFldf3iwS6oZStJcU4tSpiXTMYaaL0=",
+        "owner": "hercules-ci",
+        "repo": "flake-parts",
+        "rev": "3d04084d54bedc3d6b8b736c70ef449225c361b1",
+        "type": "github"
+      },
+      "original": {
+        "owner": "hercules-ci",
+        "repo": "flake-parts",
+        "type": "github"
+      }
+    },
+    "googletest-src": {
+      "flake": false,
+      "locked": {
+        "lastModified": 1730098635,
+        "narHash": "sha256-mpOv3OaMz6dcQpz9NUk0kvMufO5izHJNOL9nBeA1iSs=",
+        "owner": "google",
+        "repo": "googletest",
+        "rev": "5ed21863955149a5a877a53d7d5045b6919090ed",
+        "type": "github"
+      },
+      "original": {
+        "owner": "google",
+        "repo": "googletest",
+        "type": "github"
+      }
+    },
+    "lk-src": {
+      "flake": false,
+      "locked": {
+        "lastModified": 1724604459,
+        "narHash": "sha256-guG2Aic8LSHp3+Qo6LCgjsnWQ4bXBewbD3rO1ugABuE=",
+        "owner": "NREL",
+        "repo": "lk",
+        "rev": "fc82916eb3a625580dddf161bf4bf9a9f5bf01b0",
+        "type": "github"
+      },
+      "original": {
+        "owner": "NREL",
+        "repo": "lk",
+        "type": "github"
+      }
+    },
+    "nixpkgs": {
+      "locked": {
+        "lastModified": 1730200266,
+        "narHash": "sha256-l253w0XMT8nWHGXuXqyiIC/bMvh1VRszGXgdpQlfhvU=",
+        "owner": "NixOS",
+        "repo": "nixpkgs",
+        "rev": "807e9154dcb16384b1b765ebe9cd2bba2ac287fd",
+        "type": "github"
+      },
+      "original": {
+        "owner": "NixOS",
+        "ref": "nixos-unstable",
+        "repo": "nixpkgs",
+        "type": "github"
+      }
+    },
+    "nixpkgs-lib": {
+      "locked": {
+        "lastModified": 1727825735,
+        "narHash": "sha256-0xHYkMkeLVQAMa7gvkddbPqpxph+hDzdu1XdGPJR+Os=",
+        "type": "tarball",
+        "url": "https://github.com/NixOS/nixpkgs/archive/fb192fec7cc7a4c26d51779e9bab07ce6fa5597a.tar.gz"
+      },
+      "original": {
+        "type": "tarball",
+        "url": "https://github.com/NixOS/nixpkgs/archive/fb192fec7cc7a4c26d51779e9bab07ce6fa5597a.tar.gz"
+      }
+    },
+    "root": {
+      "inputs": {
+        "flake-parts": "flake-parts",
+        "googletest-src": "googletest-src",
+        "lk-src": "lk-src",
+        "nixpkgs": "nixpkgs",
+        "solarpilot-src": "solarpilot-src",
+        "soltrace-src": "soltrace-src",
+        "ssc-src": "ssc-src",
+        "wex-src": "wex-src"
+      }
+    },
+    "solarpilot-src": {
+      "flake": false,
+      "locked": {
+        "lastModified": 1728679248,
+        "narHash": "sha256-OvVysO55YnAln9r0dnUn85OaHIEXpIA44d8DLKswZ7g=",
+        "owner": "NREL",
+        "repo": "SolarPILOT",
+        "rev": "94047588ef2a3f8f6a2db802162c5b9c022a9a8d",
+        "type": "github"
+      },
+      "original": {
+        "owner": "NREL",
+        "repo": "SolarPILOT",
+        "type": "github"
+      }
+    },
+    "soltrace-src": {
+      "flake": false,
+      "locked": {
+        "lastModified": 1728503408,
+        "narHash": "sha256-UNWQaWscRUeY0Sr/uNvN3aYMFu0wfKkhwG52lGNP9m8=",
+        "owner": "NREL",
+        "repo": "SolTrace",
+        "rev": "9a22f9cedb2a685091f241af330291c766bd6248",
+        "type": "github"
+      },
+      "original": {
+        "owner": "NREL",
+        "repo": "SolTrace",
+        "type": "github"
+      }
+    },
+    "ssc-src": {
+      "flake": false,
+      "locked": {
+        "lastModified": 1729274791,
+        "narHash": "sha256-i9wmDUUH3c4vyFs8oSbsqOptBRxtWjYpbrzHjVga9ks=",
+        "owner": "mjwagner2",
+        "repo": "ssc",
+        "rev": "3db03301caf392976cc489df2ceb34e864b241fd",
+        "type": "github"
+      },
+      "original": {
+        "owner": "mjwagner2",
+        "ref": "solarpilot-develop",
+        "repo": "ssc",
+        "type": "github"
+      }
+    },
+    "wex-src": {
+      "flake": false,
+      "locked": {
+        "lastModified": 1728677963,
+        "narHash": "sha256-yxBXAHl4xDRj3pGBWnF3WyDWKYTl9Q4ZinhFOAiInK0=",
+        "owner": "NREL",
+        "repo": "wex",
+        "rev": "dadaba42b6053da0dac31c4791d7e0c032e60985",
+        "type": "github"
+      },
+      "original": {
+        "owner": "NREL",
+        "repo": "wex",
+        "type": "github"
+      }
+    }
+  },
+  "root": "root",
+  "version": 7
+}
