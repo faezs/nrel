@@ -42,7 +42,7 @@
       perSystem = { config, self', inputs', pkgs, system, ... }:
         let
           commonBuildInputs = with pkgs; [
-            wxGTK31
+            wxGTK32
             gtk3
             mesa
             freeglut
@@ -55,6 +55,8 @@
             rapidjson
             curl
             pkgs.libGL
+            glew
+            mesa.drivers
           ];
           commonInstallPhase = p: ''
             mkdir -p $out/lib $out/include
@@ -65,14 +67,22 @@
               cp ${p}_sandbox $out/bin/
             fi
           '';
+          wxGLFlags = pkgs.lib.concatStringsSep " " [
+            "-L${pkgs.wxGTK32}/lib"
+            "-lwx_gtk3u_gl-3.2"
+            "-lwx_baseu_net-3.2"
+            "-lwx_gtk3u_core-3.2"
+            "-lwx_baseu-3.2"
+          ];
           setWX = ''
-            export WXMSW3=${pkgs.wxGTK31}
+            export WXMSW3=${pkgs.wxGTK32}
           '';
           commonCMakeFlags = [
             "-DCMAKE_BUILD_TYPE=Release"
-            "-DwxWidgets_CONFIG_EXECUTABLE=${pkgs.wxGTK31}/bin/wx-config"
-            "-DwxWidgets_ROOT_DIR=${pkgs.wxGTK31}"
+            "-DwxWidgets_CONFIG_EXECUTABLE=${pkgs.wxGTK32}/bin/wx-config"
+            "-DwxWidgets_ROOT_DIR=${pkgs.wxGTK32}"
             "-DCMAKE_INSTALL_LIBDIR=lib"
+            "-DwxWidgets_USE_GL=ON"
           ];
         in {
           packages = {
@@ -110,7 +120,7 @@
               '';
 
               preConfigure = ''
-                export WXMSW3=${pkgs.wxGTK31}
+                export WXMSW3=${pkgs.wxGTK32}
                 export RAPIDJSONDIR=${pkgs.rapidjson}/include
                 export CURL_DIR=${pkgs.curl.dev}
               '';
@@ -147,6 +157,7 @@
               ];
 
               CXXFLAGS = "-Wno-deprecated";
+              #LDFLAGS="GL GLU GLEW";
 
               patches = [
                 (pkgs.writeText "add-limits.patch" ''
@@ -167,10 +178,14 @@
                 "-DLKDIR=${self'.packages.lk}"
                 "-DWEXDIR=${self'.packages.wex}"
                 "-DGTEST=${self'.packages.googletest}"
+                # "-DCMAKE_CXX_FLAGS=-I${pkgs.wxGTK32}/include/wx-3.1 -I${pkgs.wxGTK32}/lib/wx/include/gtk3-unicode-3.1"
                 # "-DCMAKE_EXE_LINKER_FLAGS=-L${self'.packages.lk}/lib -L${self'.packages.wex}/lib"
               ];
 
-              preConfigure = "export RAPIDJSONDIR=${pkgs.rapidjson}/include";
+              preConfigure = ''
+              export RAPIDJSONDIR=${pkgs.rapidjson}/include
+              export NIX_LDFLAGS="-lGL -lGLU $NIX_LDFLAGS"
+              '';
 
               installPhase = commonInstallPhase "soltrace";
             };
@@ -197,7 +212,7 @@
 
               cmakeFlags = [
                 "-DCMAKE_BUILD_TYPE=Release"
-                "-DwxWidgets_CONFIG_EXECUTABLE=${pkgs.wxGTK31}/bin/wx-config"
+                "-DwxWidgets_CONFIG_EXECUTABLE=${pkgs.wxGTK32}/bin/wx-config"
                 "-DLKDIR=${self'.packages.lk}"
                 "-DWEXDIR=${self'.packages.wex}"
                 "-DGTEST=${self'.packages.googletest}"
@@ -221,7 +236,7 @@
 
               cmakeFlags = [
                 "-DCMAKE_BUILD_TYPE=Release"
-                "-DwxWidgets_CONFIG_EXECUTABLE=${pkgs.wxGTK31}/bin/wx-config"
+                "-DwxWidgets_CONFIG_EXECUTABLE=${pkgs.wxGTK32}/bin/wx-config"
                 "-DLKDIR=${self'.packages.lk}"
                 "-DWEXDIR=${self'.packages.wex}"
                 "-DGTEST=${self'.packages.googletest}"
