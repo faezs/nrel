@@ -41,11 +41,13 @@
 
       perSystem = { config, self', inputs', pkgs, system, ... }:
         let
+          wxWidgets = pkgs.wxGTK32;
           commonBuildInputs = with pkgs; [
             wxGTK32
             gtk3
             mesa
             freeglut
+            wxWidgets
             libGLU
             curl
             nlopt
@@ -54,7 +56,7 @@
             pkg-config
             rapidjson
             curl
-            pkgs.libGL
+            libGL
             glew
             mesa.drivers
           ];
@@ -68,19 +70,19 @@
             fi
           '';
           wxGLFlags = pkgs.lib.concatStringsSep " " [
-            "-L${pkgs.wxGTK32}/lib"
+            "-L${wxWidgets}/lib"
             "-lwx_gtk3u_gl-3.2"
             "-lwx_baseu_net-3.2"
             "-lwx_gtk3u_core-3.2"
             "-lwx_baseu-3.2"
           ];
           setWX = ''
-            export WXMSW3=${pkgs.wxGTK32}
+            export WXMSW3=${wxWidgets}
           '';
           commonCMakeFlags = [
             "-DCMAKE_BUILD_TYPE=Release"
-            "-DwxWidgets_CONFIG_EXECUTABLE=${pkgs.wxGTK32}/bin/wx-config"
-            "-DwxWidgets_ROOT_DIR=${pkgs.wxGTK32}"
+            "-DwxWidgets_CONFIG_EXECUTABLE=${wxWidgets}/bin/wx-config"
+            "-DwxWidgets_ROOT_DIR=${wxWidgets}"
             "-DCMAKE_INSTALL_LIBDIR=lib"
             "-DwxWidgets_USE_GL=ON"
           ];
@@ -93,7 +95,7 @@
               version = "1.0.0";
               src = inputs.lk;
 
-              nativeBuildInputs = [ pkgs.cmake pkgs.gcc pkgs.pkg-config ];
+              nativeBuildInputs = [ pkgs.cmake pkgs.gcc pkgs.pkg-config pkgs.mesa ];
               buildInputs = commonBuildInputs;
 
               cmakeFlags = commonCMakeFlags;
@@ -120,7 +122,7 @@
               '';
 
               preConfigure = ''
-                export WXMSW3=${pkgs.wxGTK32}
+                export WXMSW3=${wxWidgets}
                 export RAPIDJSONDIR=${pkgs.rapidjson}/include
                 export CURL_DIR=${pkgs.curl.dev}
               '';
@@ -157,7 +159,7 @@
               ];
 
               CXXFLAGS = "-Wno-deprecated";
-              #LDFLAGS="GL GLU GLEW";
+              LDFLAGS = "-lGL -lGLU -lGLEW ${wxGLFlags}";
 
               patches = [
                 (pkgs.writeText "add-limits.patch" ''
@@ -174,20 +176,24 @@
                 '')
               ];
 
+
               cmakeFlags = commonCMakeFlags ++ [
                 "-DLKDIR=${self'.packages.lk}"
                 "-DWEXDIR=${self'.packages.wex}"
                 "-DGTEST=${self'.packages.googletest}"
-                # "-DCMAKE_CXX_FLAGS=-I${pkgs.wxGTK32}/include/wx-3.1 -I${pkgs.wxGTK32}/lib/wx/include/gtk3-unicode-3.1"
-                # "-DCMAKE_EXE_LINKER_FLAGS=-L${self'.packages.lk}/lib -L${self'.packages.wex}/lib"
+                "-DwxWidgets_USE_GL=1"
               ];
 
               preConfigure = ''
               export RAPIDJSONDIR=${pkgs.rapidjson}/include
-              export NIX_LDFLAGS="-lGL -lGLU $NIX_LDFLAGS"
               '';
 
-              installPhase = commonInstallPhase "soltrace";
+              installPhase = ''
+                mkdir -p $out/bin $out/lib $out/include
+                cp -r /build/source/app/deploy/x64/SolTrace $out/bin/
+                cp -r app/include/* $out/include/ || true
+                cp coretrace/coretrace.a $out/lib/libcoretrace.a
+              '';
             };
 
             ssc = pkgs.stdenv.mkDerivation {
@@ -206,17 +212,19 @@
               preConfigure = ''
                 cd nlopt
                 ./configure
-                make
                 cd ..
               '';
 
+              CXXFlags = "-Wno-alloc-size-larger-than";
+              NIX_CFLAGS_COMPILE = "-I${self'.packages.soltrace}/include";
               cmakeFlags = [
                 "-DCMAKE_BUILD_TYPE=Release"
-                "-DwxWidgets_CONFIG_EXECUTABLE=${pkgs.wxGTK32}/bin/wx-config"
+                "-DwxWidgets_CONFIG_EXECUTABLE=${wxWidgets}/bin/wx-config"
                 "-DLKDIR=${self'.packages.lk}"
                 "-DWEXDIR=${self'.packages.wex}"
                 "-DGTEST=${self'.packages.googletest}"
-                "-DCORETRACEDIR=${self'.packages.soltrace}/coretrace"
+                #"-DCORETRACEDIR=${self'.packages.soltrace}/coretrace"
+                "-DCORETRACEDIR=${self'.packages.soltrace}"
               ];
             };
 
@@ -236,7 +244,7 @@
 
               cmakeFlags = [
                 "-DCMAKE_BUILD_TYPE=Release"
-                "-DwxWidgets_CONFIG_EXECUTABLE=${pkgs.wxGTK32}/bin/wx-config"
+                "-DwxWidgets_CONFIG_EXECUTABLE=${wxWidgets}/bin/wx-config"
                 "-DLKDIR=${self'.packages.lk}"
                 "-DWEXDIR=${self'.packages.wex}"
                 "-DGTEST=${self'.packages.googletest}"
