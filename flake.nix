@@ -151,11 +151,24 @@
               version = "1.0.0";
               src = inputs.soltrace;
 
-              nativeBuildInputs = [ pkgs.cmake pkgs.gcc ];
+              nativeBuildInputs = [ pkgs.cmake pkgs.gcc pkgs.makeWrapper ];
               buildInputs = commonBuildInputs ++ [
                 self'.packages.lk
                 self'.packages.wex
                 self'.packages.googletest
+                pkgs.gsettings-desktop-schemas
+                pkgs.hicolor-icon-theme
+                pkgs.shared-mime-info
+                pkgs.vulkan-loader
+                pkgs.xorg.libxcb
+                pkgs.gdk-pixbuf
+                pkgs.librsvg
+                pkgs.adwaita-icon-theme
+                pkgs.mesa.drivers
+                pkgs.xorg.libX11
+                pkgs.xorg.libXrender
+                pkgs.xorg.libXdamage
+                pkgs.xorg.libXext
               ];
 
               CXXFLAGS = "-Wno-deprecated";
@@ -189,13 +202,46 @@
               '';
 
               installPhase = ''
+                runHook preInstall
+
                 mkdir -p $out/bin $out/lib $out/include
                 cp -r /build/source/app/deploy/x64/SolTrace $out/bin/
-                cp -r app/include/* $out/include/ || true
-                cp coretrace/coretrace.a $out/lib/libcoretrace.a
+                install -Dm644 coretrace/coretrace.a $out/lib/libcoretrace.a
+                install -Dm755 coretrace/coretrace_api.so $out/lib/libcoretrace_api.so
+                ls -lR ../coretrace
+                cp ../coretrace/*.h $out/include/
+                runHook postInstall
               '';
-            };
 
+              postInstall = ''
+                wrapProgram $out/bin/SolTrace \
+                  --prefix XDG_DATA_DIRS : "${pkgs.gtk3}/share/gsettings-schemas/${pkgs.gtk3.name}" \
+                  --prefix XDG_DATA_DIRS : "${pkgs.gsettings-desktop-schemas}/share/gsettings-schemas/${pkgs.gsettings-desktop-schemas.name}" \
+                  --prefix XDG_DATA_DIRS : "${pkgs.shared-mime-info}/share" \
+                  --prefix XDG_DATA_DIRS : "${pkgs.adwaita-icon-theme}/share" \
+                  --prefix GI_TYPELIB_PATH : "${pkgs.gtk3}/lib/girepository-1.0" \
+                  --set GDK_PIXBUF_MODULE_FILE "${pkgs.librsvg}/lib/gdk-pixbuf-2.0/2.10.0/loaders.cache" \
+                  --set LIBGL_DRIVERS_PATH "${pkgs.mesa.drivers}/lib/dri" \
+                  --set __EGL_VENDOR_LIBRARY_FILENAMES "${pkgs.mesa.drivers}/share/glvnd/egl_vendor.d/50_mesa.json" \
+                  --prefix LD_LIBRARY_PATH : "${pkgs.lib.makeLibraryPath [
+                    pkgs.gtk3
+                    pkgs.mesa
+                    pkgs.mesa.drivers
+                    pkgs.libglvnd
+                    pkgs.vulkan-loader
+                    pkgs.xorg.libxcb
+                    pkgs.gdk-pixbuf
+                    pkgs.librsvg
+                    pkgs.adwaita-icon-theme
+                    pkgs.xorg.libX11
+                    pkgs.xorg.libXrender
+                    pkgs.xorg.libXdamage
+                    pkgs.xorg.libXext
+                  ]}" \
+                  --set XCURSOR_PATH "${pkgs.gtk3}/share/icons" \
+                  --set FONTCONFIG_FILE "${pkgs.fontconfig.out}/etc/fonts/fonts.conf"
+               '';
+            };
             ssc = pkgs.stdenv.mkDerivation {
               pname = "ssc";
               version = "1.0.0";
@@ -209,14 +255,24 @@
                 self'.packages.soltrace
               ];
 
+              postPatch = ''
+                substituteInPlace solarpilot/interop.cpp \
+                  --replace '#define HELIO_INTERCEPT false;' \
+                            '#define HELIO_INTERCEPT false'
+              '';
+
               preConfigure = ''
                 cd nlopt
                 ./configure
                 cd ..
               '';
 
-              CXXFlags = "-Wno-alloc-size-larger-than";
-              NIX_CFLAGS_COMPILE = "-I${self'.packages.soltrace}/include";
+
+              NIX_CFLAGS_COMPILE = pkgs.lib.concatStringsSep " " [
+                "-Wno-error"
+                "-I${self'.packages.soltrace}/include"
+                "-trigraphs"
+              ];
               cmakeFlags = [
                 "-DCMAKE_BUILD_TYPE=Release"
                 "-DwxWidgets_CONFIG_EXECUTABLE=${wxWidgets}/bin/wx-config"
@@ -226,6 +282,12 @@
                 #"-DCORETRACEDIR=${self'.packages.soltrace}/coretrace"
                 "-DCORETRACEDIR=${self'.packages.soltrace}"
               ];
+              installPhase = ''
+              runHook preInstall
+              mkdir -p $out/lib
+              ls -a
+              runHook postInstall
+              '';
             };
 
             solarpilot = pkgs.stdenv.mkDerivation {
@@ -245,11 +307,13 @@
               cmakeFlags = [
                 "-DCMAKE_BUILD_TYPE=Release"
                 "-DwxWidgets_CONFIG_EXECUTABLE=${wxWidgets}/bin/wx-config"
-                "-DLKDIR=${self'.packages.lk}"
-                "-DWEXDIR=${self'.packages.wex}"
+                "-DLK_LIB=${self'.packages.lk}/lib"
+                "-DWEX_LIB=${self'.packages.wex}/lib"
                 "-DGTEST=${self'.packages.googletest}"
-                "-DCORETRACEDIR=${self'.packages.soltrace}/coretrace"
-                "-DSSCDIR=${self'.packages.ssc}"
+                "-DCORETRACE_LIB=${self'.packages.soltrace}/lib"
+                "-DNLOPT_LIB=${self'.packages.ssc}/nlopt/lib"
+                "-DLPSOLVE_LIB=${self'.packages.ssc}/lpsolve/lib"
+                # "-DSHARED_LIB"
               ];
 
               installPhase = ''
