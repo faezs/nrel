@@ -63,6 +63,7 @@
           commonInstallPhase = p: ''
             mkdir -p $out/lib $out/include
             cp ${p}.a $out/lib/lib${p}.a
+            cp ${p}.a $out/lib/${p}.a
             cp -r ../include/* $out/include/
             if [ -f ${p}_sandbox ]; then
               mkdir -p $out/bin
@@ -189,7 +190,6 @@
                 '')
               ];
 
-
               cmakeFlags = commonCMakeFlags ++ [
                 "-DLKDIR=${self'.packages.lk}"
                 "-DWEXDIR=${self'.packages.wex}"
@@ -198,16 +198,17 @@
               ];
 
               preConfigure = ''
-              export RAPIDJSONDIR=${pkgs.rapidjson}/include
+                export RAPIDJSONDIR=${pkgs.rapidjson}/include
               '';
 
               installPhase = ''
                 runHook preInstall
-
                 mkdir -p $out/bin $out/lib $out/include
                 cp -r /build/source/app/deploy/x64/SolTrace $out/bin/
                 install -Dm644 coretrace/coretrace.a $out/lib/libcoretrace.a
+                install -Dm644 coretrace/coretrace.a $out/lib/coretrace.a
                 install -Dm755 coretrace/coretrace_api.so $out/lib/libcoretrace_api.so
+                install -Dm755 coretrace/coretrace_api.so $out/lib/coretrace_api.so
                 ls -lR ../coretrace
                 cp ../coretrace/*.h $out/include/
                 runHook postInstall
@@ -240,8 +241,9 @@
                   ]}" \
                   --set XCURSOR_PATH "${pkgs.gtk3}/share/icons" \
                   --set FONTCONFIG_FILE "${pkgs.fontconfig.out}/etc/fonts/fonts.conf"
-               '';
+              '';
             };
+
             ssc = pkgs.stdenv.mkDerivation {
               pname = "ssc";
               version = "1.0.0";
@@ -267,26 +269,32 @@
                 cd ..
               '';
 
-
               NIX_CFLAGS_COMPILE = pkgs.lib.concatStringsSep " " [
                 "-Wno-error"
                 "-I${self'.packages.soltrace}/include"
                 "-trigraphs"
               ];
-              cmakeFlags = [
-                "-DCMAKE_BUILD_TYPE=Release"
-                "-DwxWidgets_CONFIG_EXECUTABLE=${wxWidgets}/bin/wx-config"
+
+              cmakeFlags = commonCMakeFlags ++ [
                 "-DLKDIR=${self'.packages.lk}"
                 "-DWEXDIR=${self'.packages.wex}"
                 "-DGTEST=${self'.packages.googletest}"
-                #"-DCORETRACEDIR=${self'.packages.soltrace}/coretrace"
                 "-DCORETRACEDIR=${self'.packages.soltrace}"
               ];
+
               installPhase = ''
-              runHook preInstall
-              mkdir -p $out/lib
-              ls -a
-              runHook postInstall
+                runHook preInstall
+                mkdir -p $out/{lib,include}
+                cp nlopt/nlopt.a $out/lib/nlopt.a
+                cp lpsolve/lpsolve.a $out/lib/lpsolve.a
+                cp shared/shared.a $out/lib/shared.a
+                cp solarpilot/solarpilot_core.a $out/lib/solarpilot_core.a
+                # ls -R
+                cp -r ../nlopt/*.h* $out/include/
+                cp -r ../shared/*.h* $out/include/
+                cp -r ../solarpilot/*.h* $out/include/
+
+                runHook postInstall
               '';
             };
 
@@ -304,21 +312,38 @@
                 self'.packages.ssc
               ];
 
-              cmakeFlags = [
-                "-DCMAKE_BUILD_TYPE=Release"
+              preConfigure = ''
+                export LKDIR=${self'.packages.lk}
+                export WEXDIR=${self'.packages.wex}
+                export CORETRACEDIR=${self'.packages.soltrace}
+                export SSCDIR=${self'.packages.ssc}
+                export LK_LIB=${self'.packages.lk}/lib
+                export WEX_LIB=${self'.packages.wex}/lib
+                export CORETRACE_LIB=${self'.packages.soltrace}/lib
+                export LPSOLVE_LIB=${self'.packages.ssc}/lib
+                export NLOPT_LIB=${self'.packages.ssc}/lib
+                export SHARED_LIB=${self'.packages.ssc}/lib
+                export SPCORE_LIB=${self'.packages.ssc}/lib
+
+              '';
+
+              cmakeFlags = commonCMakeFlags ++ [
+                "-DCMAKE_LIBRARY_PATH=${self'.packages.lk}/lib:${self'.packages.wex}/lib:${self'.packages.soltrace}/lib:${self'.packages.ssc}/lib"
                 "-DwxWidgets_CONFIG_EXECUTABLE=${wxWidgets}/bin/wx-config"
-                "-DLK_LIB=${self'.packages.lk}/lib"
-                "-DWEX_LIB=${self'.packages.wex}/lib"
+                "-DLK_LIB=${self'.packages.lk}/lib/liblk.a"
+                "-DWEX_LIB=${self'.packages.wex}/lib/libwex.a"
                 "-DGTEST=${self'.packages.googletest}"
-                "-DCORETRACE_LIB=${self'.packages.soltrace}/lib"
-                "-DNLOPT_LIB=${self'.packages.ssc}/nlopt/lib"
-                "-DLPSOLVE_LIB=${self'.packages.ssc}/lpsolve/lib"
-                # "-DSHARED_LIB"
+                "-DCORETRACE_LIB=${self'.packages.soltrace}/lib/libcoretrace.a"
+                "-DSPCORE_LIB=${self'.packages.ssc}/lib/libsolarpilot_core.a"
+                "-DSHARED_LIB=${self'.packages.ssc}/lib/libshared.a"
+                "-DNLOPT_LIB=${self'.packages.ssc}/lib/libnlopt.a"
+                "-DLPSOLVE_LIB=${self'.packages.ssc}/lib/liblpsolve.a"
               ];
 
               installPhase = ''
                 mkdir -p $out/bin
-                cp deploy/x64/SolarPILOT $out/bin/
+                cp ../deploy/x64/SolarPILOT $out/bin/
+                cp -r ../deploy/exelib $out/
                 wrapProgram $out/bin/SolarPILOT \
                   --prefix LD_LIBRARY_PATH : ${
                     pkgs.lib.makeLibraryPath commonBuildInputs
