@@ -344,6 +344,10 @@
                 mkdir -p $out/bin
                 cp ../deploy/x64/SolarPILOT $out/bin/
                 cp -r ../deploy/exelib $out/
+                cp -r ../deploy/climate_files $out/
+                cp -r ../deploy/api $out/
+                cp -r ../deploy/linux $out/
+                cp -r ../deploy/samples $out/
                 wrapProgram $out/bin/SolarPILOT \
                   --prefix LD_LIBRARY_PATH : ${
                     pkgs.lib.makeLibraryPath commonBuildInputs
