@@ -41,9 +41,9 @@
 
       perSystem = { config, self', inputs', pkgs, system, ... }:
         let
-          wxWidgets = pkgs.wxGTK32;
+          wxWidgets = pkgs.wxGTK31;
           commonBuildInputs = with pkgs; [
-            wxGTK32
+            wxGTK31
             gtk3
             mesa
             freeglut
@@ -72,10 +72,10 @@
           '';
           wxGLFlags = pkgs.lib.concatStringsSep " " [
             "-L${wxWidgets}/lib"
-            "-lwx_gtk3u_gl-3.2"
-            "-lwx_baseu_net-3.2"
-            "-lwx_gtk3u_core-3.2"
-            "-lwx_baseu-3.2"
+            "-lwx_gtk3u_gl-3.1"
+            "-lwx_baseu_net-3.1"
+            "-lwx_gtk3u_core-3.1"
+            "-lwx_baseu-3.1"
           ];
           setWX = ''
             export WXMSW3=${wxWidgets}
@@ -303,7 +303,7 @@
               version = "1.0.0";
               src = inputs.solarpilot;
 
-              nativeBuildInputs = [ pkgs.cmake pkgs.gcc pkgs.makeWrapper ];
+              nativeBuildInputs = [ pkgs.cmake pkgs.gcc pkgs.makeWrapper pkgs.wrapGAppsHook3 ];
               buildInputs = commonBuildInputs ++ [
                 self'.packages.lk
                 self'.packages.wex
@@ -348,6 +348,34 @@
                   --prefix LD_LIBRARY_PATH : ${
                     pkgs.lib.makeLibraryPath commonBuildInputs
                   }
+              '';
+              postInstall = ''
+                wrapProgram $out/bin/SolarPILOT \
+                  --prefix XDG_DATA_DIRS : "${pkgs.gtk3}/share/gsettings-schemas/${pkgs.gtk3.name}" \
+                  --prefix XDG_DATA_DIRS : "${pkgs.gsettings-desktop-schemas}/share/gsettings-schemas/${pkgs.gsettings-desktop-schemas.name}" \
+                  --prefix XDG_DATA_DIRS : "${pkgs.shared-mime-info}/share" \
+                  --prefix XDG_DATA_DIRS : "${pkgs.adwaita-icon-theme}/share" \
+                  --prefix GI_TYPELIB_PATH : "${pkgs.gtk3}/lib/girepository-1.0" \
+                  --set GDK_PIXBUF_MODULE_FILE "${pkgs.librsvg}/lib/gdk-pixbuf-2.0/2.10.0/loaders.cache" \
+                  --set LIBGL_DRIVERS_PATH "${pkgs.mesa.drivers}/lib/dri" \
+                  --set __EGL_VENDOR_LIBRARY_FILENAMES "${pkgs.mesa.drivers}/share/glvnd/egl_vendor.d/50_mesa.json" \
+                  --prefix LD_LIBRARY_PATH : "${pkgs.lib.makeLibraryPath [
+                    pkgs.gtk3
+                    pkgs.mesa
+                    pkgs.mesa.drivers
+                    pkgs.libglvnd
+                    pkgs.vulkan-loader
+                    pkgs.xorg.libxcb
+                    pkgs.gdk-pixbuf
+                    pkgs.librsvg
+                    pkgs.adwaita-icon-theme
+                    pkgs.xorg.libX11
+                    pkgs.xorg.libXrender
+                    pkgs.xorg.libXdamage
+                    pkgs.xorg.libXext
+                  ]}" \
+                  --set XCURSOR_PATH "${pkgs.gtk3}/share/icons" \
+                  --set FONTCONFIG_FILE "${pkgs.fontconfig.out}/etc/fonts/fonts.conf"
               '';
             };
           };
