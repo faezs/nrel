@@ -312,6 +312,10 @@
                 self'.packages.ssc
               ];
 
+              patches = [
+                ./climate-dir.patch
+              ];
+
               preConfigure = ''
                 export LKDIR=${self'.packages.lk}
                 export WEXDIR=${self'.packages.wex}

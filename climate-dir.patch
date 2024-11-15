@@ -1,0 +1,25 @@
+diff --git a/app/GUI_main.cpp b/app/GUI_main.cpp
+index 380e66c..db6ef14 100644
+--- a/app/GUI_main.cpp
++++ b/app/GUI_main.cpp
+@@ -280,17 +280,18 @@ SPFrame::SPFrame(wxWindow* parent, int id, const wxString& title, const wxPoint&
+     _image_dir.SetPath( _install_dir.GetPath() ); 
+     _image_dir.AppendDir("exelib");
+     _image_dir.AppendDir("images");
+-    _climate_dir.SetPath( _install_dir.GetPath() );
+-    _climate_dir.AppendDir("climate_files");
+     _help_dir.SetPath( _install_dir.GetPath() );
+     _help_dir.AppendDir("exelib");
+     _help_dir.AppendDir("help");
+     _local_dir.SetPath( wxPathOnly(wxStandardPaths::Get().GetUserLocalDataDir()) );
+     _local_dir.AppendDir("SolarPILOT");
++    _climate_dir.SetPath( _local_dir.GetPath() );
++    _climate_dir.AppendDir("climate_files");
+ 
+     if(! wxDir::Exists(_local_dir.GetPath()))
+     {
+         wxDir::Make(_local_dir.GetPath());
++        wxDir::Make(_climate_dir.GetPath());
+     }
+ 
+     //Parse the settings file
