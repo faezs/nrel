@@ -88,6 +88,20 @@
             "-DwxWidgets_USE_GL=ON"
           ];
         in {
+          devShells = {
+            default = pkgs.mkShell {
+              buildInputs = [
+                (pkgs.python3.withPackages(p : [
+                  p.pandas
+                  p.numpy
+                  p.plotly
+                  p.matplotlib
+                  p.jupyter
+                  p.ipython
+                ]))
+              ];
+            };
+          };
           packages = {
             default = self'.packages.solarpilot;
 
@@ -211,6 +225,7 @@
                 install -Dm755 coretrace/coretrace_api.so $out/lib/coretrace_api.so
                 ls -lR ../coretrace
                 cp ../coretrace/*.h $out/include/
+                cp ../app/deploy/api/pysoltrace.py $out/lib/pysoltrace.py
                 runHook postInstall
               '';
 
